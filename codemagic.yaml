@@ -7,7 +7,7 @@ workflows:
       vars:
         PACKAGE_NAME: "com.example.scamcalldetector"
       java: 11
-  
+      android_sdk: 33
     scripts:
       - name: Install tools
         script: |
@@ -88,17 +88,26 @@ workflows:
           chmod +x gradlew
           
           # Show available tasks
-          ./gradlew tasks --all
+          ./gradlew tasks
           
           # Clean and build with debug info
-          ./gradlew clean --info
-          ./gradlew assembleDebug --info --stacktrace --scan
+          echo "=== Running Gradle Clean ==="
+          ./gradlew clean --info --stacktrace
+          
+          echo "=== Running Gradle Dependencies ==="
+          ./gradlew dependencies --info
+          
+          echo "=== Building Debug APK ==="
+          ./gradlew assembleDebug --info --stacktrace
+          
+          echo "=== Build Output Directory Contents ==="
+          ls -la app/build/outputs/apk/debug/
     artifacts:
-      - /tmp/android-build/build/outputs/apk/debug/*.apk
+      - /tmp/android-build/app/build/outputs/apk/debug/*.apk
     publishing:
       email:
         recipients:
-          - paulf.hague@gmail.com
+          - user@example.com
         notify:
           success: true
           failure: true 
