@@ -7,12 +7,12 @@ workflows:
       vars:
         PACKAGE_NAME: "com.example.scamcalldetector"
       java: 11
-    
+      android_sdk: 33
     scripts:
       - name: Install tools
         script: |
           brew install dos2unix
-
+          
       - name: Set up build environment
         script: |
           # Create fresh working directory
@@ -31,11 +31,12 @@ workflows:
           rm -rf ~/.gradle
           mkdir -p ~/.gradle
           
-          # Set up Gradle properties
+          # Set up Gradle properties with more memory
           echo "org.gradle.daemon=false" > ~/.gradle/gradle.properties
-          echo "org.gradle.parallel=false" >> ~/.gradle/gradle.properties
-          echo "org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m" >> ~/.gradle/gradle.properties
+          echo "org.gradle.parallel=true" >> ~/.gradle/gradle.properties
+          echo "org.gradle.jvmargs=-Xmx4096m -XX:MaxPermSize=1024m -XX:+HeapDumpOnOutOfMemoryError" >> ~/.gradle/gradle.properties
           echo "android.useAndroidX=true" >> ~/.gradle/gradle.properties
+          echo "android.enableJetifier=true" >> ~/.gradle/gradle.properties
           
           # Create local.properties
           echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
@@ -58,36 +59,46 @@ workflows:
           # Fix permissions
           chmod +x gradlew
           
-          # Verify line endings and permissions
-          file gradlew
-          ls -la gradlew
-          
           # Debug info
+          echo "=== Environment Info ==="
+          java -version
+          echo "ANDROID_SDK_ROOT: $ANDROID_SDK_ROOT"
+          echo "JAVA_HOME: $JAVA_HOME"
+          
+          echo "=== Directory Structure ==="
           pwd
           ls -la
+          
+          echo "=== Gradle Files Content ==="
           echo "Content of build.gradle:"
           cat build.gradle
           echo "Content of settings.gradle:"
           cat settings.gradle
+          echo "Content of gradle.properties:"
+          cat ~/.gradle/gradle.properties
+          
+          echo "=== Gradle Wrapper Info ==="
+          ./gradlew --version
 
       - name: Build Android app
         script: |
           cd /tmp/android-build
-          # Ensure gradlew has correct line endings before each use
+          # Ensure gradlew has correct line endings
           dos2unix gradlew
           chmod +x gradlew
           
-          # Build with explicit tasks
+          # Show available tasks
           ./gradlew tasks --all
-          ./gradlew clean
-          ./gradlew compileDebugSources --stacktrace
-          ./gradlew assembleDebug --stacktrace
+          
+          # Clean and build with debug info
+          ./gradlew clean --info
+          ./gradlew assembleDebug --info --stacktrace --scan
     artifacts:
       - /tmp/android-build/build/outputs/apk/debug/*.apk
     publishing:
       email:
         recipients:
-          - paulf.hague@gmail.com
+          - user@example.com
         notify:
           success: true
           failure: true 
