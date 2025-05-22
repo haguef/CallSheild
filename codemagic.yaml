@@ -7,41 +7,32 @@ workflows:
       vars:
         PACKAGE_NAME: "com.example.scamcalldetector"
       java: 11
-    
+      android_sdk: latest
     scripts:
-      - name: Clean workspace
+      - name: Set up build environment
         script: |
-          # Clean Gradle caches and workspace
-          rm -rf ~/.gradle/caches/
-          rm -rf ~/.gradle/wrapper/
-          rm -rf ~/.android/build-cache/
-          rm -rf .gradle
-          rm -rf build
-          rm -rf app/build
-
-      - name: Fix line endings
-        script: |
-          # Install dos2unix
-          apt-get update
-          apt-get install -y dos2unix
+          # Create fresh working directory
+          WORK_DIR="/tmp/android-build"
+          rm -rf "$WORK_DIR"
+          mkdir -p "$WORK_DIR"
+          cp -r . "$WORK_DIR/"
+          cd "$WORK_DIR"
           
-          # Fix line endings for all script files
-          find . -type f -name "*.sh" -exec dos2unix {} \;
-          find . -type f -name "gradlew" -exec dos2unix {} \;
-          dos2unix gradlew
-
-      - name: Create project structure
-        script: |
-          # Create necessary directories
-          mkdir -p src/main/java/com/example/scamcalldetector
-          mkdir -p src/main/res/values
-          mkdir -p src/main/res/layout
-          mkdir -p gradle/wrapper
+          # Clean any existing Gradle state
+          rm -rf ~/.gradle
+          mkdir -p ~/.gradle
+          
+          # Set up Gradle properties
+          echo "org.gradle.daemon=false" > ~/.gradle/gradle.properties
+          echo "org.gradle.parallel=false" >> ~/.gradle/gradle.properties
+          echo "org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m" >> ~/.gradle/gradle.properties
+          echo "android.useAndroidX=true" >> ~/.gradle/gradle.properties
           
           # Create local.properties
           echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
           
           # Set up Gradle wrapper
+          mkdir -p gradle/wrapper
           cd gradle/wrapper
           wget https://services.gradle.org/distributions/gradle-7.6-bin.zip
           wget https://raw.githubusercontent.com/gradle/gradle/v7.6.0/gradle/wrapper/gradle-wrapper.jar
@@ -57,24 +48,28 @@ workflows:
           # Fix permissions
           chmod +x gradlew
           
+          # Debug info
+          pwd
+          ls -la
+          echo "Content of build.gradle:"
+          cat build.gradle
+          echo "Content of settings.gradle:"
+          cat settings.gradle
+
       - name: Build Android app
         script: |
-          # Set Gradle properties
-          mkdir -p ~/.gradle
-          echo "org.gradle.daemon=false" > ~/.gradle/gradle.properties
-          echo "org.gradle.parallel=true" >> ~/.gradle/gradle.properties
-          echo "org.gradle.jvmargs=-Xmx4g -XX:MaxPermSize=2048m" >> ~/.gradle/gradle.properties
-          echo "org.gradle.workers.max=2" >> ~/.gradle/gradle.properties
-          
-          # Build with clean workspace
-          ./gradlew clean --no-daemon
-          ./gradlew assembleDebug --no-daemon --info --stacktrace --warning-mode=all
+          cd /tmp/android-build
+          # Build with explicit tasks
+          ./gradlew tasks --all
+          ./gradlew clean
+          ./gradlew compileDebugSources --stacktrace
+          ./gradlew assembleDebug --stacktrace
     artifacts:
-      - build/outputs/apk/debug/*.apk
+      - /tmp/android-build/build/outputs/apk/debug/*.apk
     publishing:
       email:
         recipients:
-          - paulf.hague@gmail.com
+          - user@example.com
         notify:
           success: true
           failure: true 
