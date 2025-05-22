@@ -7,8 +7,13 @@ workflows:
       vars:
         PACKAGE_NAME: "com.example.scamcalldetector"
       java: 11
-    
+      android_sdk: 33
     scripts:
+      - name: Install tools
+        script: |
+          apt-get update
+          apt-get install -y dos2unix
+
       - name: Set up build environment
         script: |
           # Create fresh working directory
@@ -17,6 +22,11 @@ workflows:
           mkdir -p "$WORK_DIR"
           cp -r . "$WORK_DIR/"
           cd "$WORK_DIR"
+          
+          # Fix line endings for all script files
+          find . -type f -name "*.sh" -exec dos2unix {} \;
+          find . -type f -name "gradlew" -exec dos2unix {} \;
+          dos2unix gradlew
           
           # Clean any existing Gradle state
           rm -rf ~/.gradle
@@ -38,15 +48,21 @@ workflows:
           wget https://raw.githubusercontent.com/gradle/gradle/v7.6.0/gradle/wrapper/gradle-wrapper.jar
           cd ../..
           
-          # Create gradle-wrapper.properties
-          echo "distributionBase=GRADLE_USER_HOME
-          distributionPath=wrapper/dists
-          distributionUrl=https\://services.gradle.org/distributions/gradle-7.6-bin.zip
-          zipStoreBase=GRADLE_USER_HOME
-          zipStorePath=wrapper/dists" > gradle/wrapper/gradle-wrapper.properties
+          # Create gradle-wrapper.properties with Unix line endings
+          cat > gradle/wrapper/gradle-wrapper.properties << EOL
+distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+distributionUrl=https\://services.gradle.org/distributions/gradle-7.6-bin.zip
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
+EOL
           
           # Fix permissions
           chmod +x gradlew
+          
+          # Verify line endings and permissions
+          file gradlew
+          ls -la gradlew
           
           # Debug info
           pwd
@@ -59,6 +75,10 @@ workflows:
       - name: Build Android app
         script: |
           cd /tmp/android-build
+          # Ensure gradlew has correct line endings before each use
+          dos2unix gradlew
+          chmod +x gradlew
+          
           # Build with explicit tasks
           ./gradlew tasks --all
           ./gradlew clean
@@ -69,7 +89,7 @@ workflows:
     publishing:
       email:
         recipients:
-          - paulf.hague@gmail.com
+          - user@example.com
         notify:
           success: true
           failure: true 
