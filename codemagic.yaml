@@ -7,7 +7,7 @@ workflows:
       vars:
         PACKAGE_NAME: "com.example.scamcalldetector"
       java: 11
-  
+      android_sdk: 33
     scripts:
       - name: Install tools
         script: |
@@ -49,13 +49,11 @@ workflows:
           cd ../..
           
           # Create gradle-wrapper.properties with Unix line endings
-          cat > gradle/wrapper/gradle-wrapper.properties << EOL
-distributionBase=GRADLE_USER_HOME
+          echo 'distributionBase=GRADLE_USER_HOME
 distributionPath=wrapper/dists
 distributionUrl=https\://services.gradle.org/distributions/gradle-7.6-bin.zip
 zipStoreBase=GRADLE_USER_HOME
-zipStorePath=wrapper/dists
-EOL
+zipStorePath=wrapper/dists' > gradle/wrapper/gradle-wrapper.properties
           
           # Fix permissions
           chmod +x gradlew
@@ -89,7 +87,7 @@ EOL
     publishing:
       email:
         recipients:
-          - paulf.hague@gmail.com
+          - user@example.com
         notify:
           success: true
           failure: true 
