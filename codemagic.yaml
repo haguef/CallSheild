@@ -7,12 +7,11 @@ workflows:
       vars:
         PACKAGE_NAME: "com.example.scamcalldetector"
       java: 11
-    
+      android_sdk: 33
     scripts:
       - name: Install tools
         script: |
-          apt-get update
-          apt-get install -y dos2unix
+          brew install dos2unix
 
       - name: Set up build environment
         script: |
@@ -88,7 +87,7 @@ workflows:
     publishing:
       email:
         recipients:
-          - paulf.hague@gmail.com
+          - user@example.com
         notify:
           success: true
           failure: true 
