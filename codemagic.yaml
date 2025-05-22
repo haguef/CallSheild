@@ -7,7 +7,7 @@ workflows:
       vars:
         PACKAGE_NAME: "com.example.scamcalldetector"
       java: 11
-      android_sdk: 33
+    
     scripts:
       - name: Install tools
         script: |
@@ -87,7 +87,7 @@ zipStorePath=wrapper/dists' > gradle/wrapper/gradle-wrapper.properties
     publishing:
       email:
         recipients:
-          - user@example.com
+          - paulf.hague@gmail.com
         notify:
           success: true
           failure: true 
