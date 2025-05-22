@@ -7,7 +7,7 @@ workflows:
       vars:
         PACKAGE_NAME: "com.example.scamcalldetector"
       java: 11
-      android_sdk: latest
+    
     scripts:
       - name: Clean workspace
         script: |
